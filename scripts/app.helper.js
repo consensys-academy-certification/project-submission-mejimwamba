@@ -42,30 +42,38 @@ let App = {
     // The init() function will be called after the Web3 object is set in the test file
     // This function should update App.web3, App.networkId and App.contract
     async init() {
+      App.web3 = new Web3(web3.givenProvider)
+      App.networkId = await web3.eth.net.getId()
+      App.contract = await ProjectSubmission.deployed();
 
     },
 
     // This function should get the account made available by web3 and update App.account
     async getAccount(){
-
+      var accounts = await App.web3.eth.getAccounts()
+      App.account = accounts[0]
     },
 
     // Read the owner state from the contract and update App.contractOwner
     // Return the owner address
     async readOwnerAddress(){
-
+      App.contractOwner = await App.contract.owner()
+      return App.contractOwner
     },
 
     // Read the owner balance from the contract
     // Return the owner balance
     async readOwnerBalance(){
-
+      var rBalance = await App.contract.ownerBalance()
+      return rBalance
     },
 
     // Read the state of a provided University account
     // This function takes one address parameter called account    
     // Return the state object 
     async readUniversityState(account){
+      var state = await App.contract.universities(account)
+      return state
 
     },
 
@@ -73,14 +81,18 @@ let App = {
     // This function takes one address parameter called account
     // Return the transaction object 
     async registerUniversity(account){
-
+      id = {from: web3.eth.defaultAccount};
+      var registerUni = await App.contract.registerUniversity(account, id)
+      return registerUni
     },
 
     // Disable the university at the provided address when this function is called
     // This function takes one address parameter called account
     // Return the transaction object
     async disableUniversity(account){
-
+      id = {from: web3.eth.defaultAccount};
+      var disableUni = await App.contract.disableUniversity(account, id)
+      return disableUni
     },
 
     // Submit a new project when this function is called
@@ -89,6 +101,11 @@ let App = {
     // Return the transaction object 
     async submitProject(projectHash, universityAddress, amount){
 
+      var _amount = App.web3.utils.toBN(amount);
+      var _eth = App.web3.utils.toWei(_amount);
+      var id = { from: web3.eth.defaultAccount, value: _eth };
+      var submit = await App.contract.submitProject(projectHash, universityAddress, id);
+      return submit
     },
 
     // Review a project when this function is called
@@ -96,6 +113,8 @@ let App = {
     //   - a projectHash and a number (status)
     // Return the transaction object
     async reviewProject(projectHash, status){
+      var review = await App.contract.reviewProject(projectHash, status)
+      return review
 
     },
 
@@ -104,7 +123,8 @@ let App = {
     //   - a projectHash
     // Return the transaction object
     async readProjectState(projectHash){
-
+      var readState = await App.contract.projects(projectHash)
+      return readState
     },
 
     // Make a donation when this function is called
@@ -112,13 +132,18 @@ let App = {
     //   - a projectHash and a number (amount)
     // Return the transaction object
     async donate(projectHash, amount){
-
+      var _amount = amount.toString();
+      var id = { from: web3.eth.defaultAccount, _amount };
+      var donateAmount = await App.contract.donate(projectHash, id)
+      return donateAmount
     },
 
     // Allow a university or the contract owner to withdraw their funds when this function is called
     // Return the transaction object
     async withdraw(){
-
+      id = {from: web3.eth.defaultAccount};
+      var empty = await App.contract.withdraw(id)
+      return empty
     },
 
     // Allow a project author to withdraw their funds when this function is called
@@ -127,7 +152,9 @@ let App = {
     // Use the following format to call this function: this.contract.methods['withdraw(bytes32)'](...)
     // Return the transaction object
     async authorWithdraw(projectHash){
-
+      var id = { from: web3.eth.defaultAccount };
+      var empty = await App.contract.methods['withdraw(bytes32)'](projectHash, id)
+      return empty
     }
 } 
 
